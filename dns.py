@@ -33,8 +33,8 @@ class DNS():
         if data:
             ans = dnslib.DNSRecord.parse(data)
             question = ans.questions[0]
-            if question.qname in self.cache and question.qtype in self.cache[question.qname]:
-                cache, ttl = self.cache[question.qname][question.qtype]
+            if question.qname in self.cache:
+                cache, ttl = self.cache[question.qname]
                 print('Кешированная запись ' + str(question.qname) + ' время жизни записи ' + str(time.ctime(ttl)))
                 print(cache)
                 ans.questions.remove(question)
@@ -53,17 +53,13 @@ class DNS():
             ans = dnslib.DNSRecord.parse(data)
             print(ans)
             for question in ans.rr:
-                if question.rname in self.cache:
-                    self.cache[question.rname][question.rtype] = (ans, int(time.time()) + question.ttl)
-                else:
-                    self.cache[question.rname] = {question.rtype: (ans, int(time.time()) + question.ttl)}
+                self.cache[question.rname]= (ans, int(time.time()) + question.ttl)
 
     def check_TTL(self):
         for i in self.cache:
-            for j in self.cache[i]:
-                cache, ttl = self.cache[i][j]
-                if ttl < int(time.time()):
-                    del self.cache[i][j]
+            cache, ttl = self.cache[i]
+            if ttl < int(time.time()):
+                del self.cache[i]
 
     def test_send(self, addr):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
